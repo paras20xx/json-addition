@@ -1,6 +1,6 @@
 {
   "globalAdditionRules": {
-    "binaryOpertion": "OR",
+    "binaryOperation": "OR",
     "ignoreErrors": false,
     "sort": false,
     "unique": false

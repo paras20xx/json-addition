@@ -6,7 +6,7 @@ var _ = require('lodash'),
     chalk = require('chalk');
 
 var standardAdditionRules = {
-    binaryOpertion: 'OR',
+    binaryOperation: 'OR',
     ignoreErrors: false,
     sort: false,
     unique: false
@@ -77,9 +77,10 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
     } else if (typeof a === 'boolean' && typeof b === 'boolean') {
         if (rulesForThis.binaryOperation === 'AND') {
             retValue = a && b;
-        } else if (rulesForThis.binaryOperation === 'AND') {
+        } else if (rulesForThis.binaryOperation === 'OR') {
             retValue = a || b;
         } else {
+            console.log(rulesForThis);
             console.log(chalk.red('Unexpected value (' + rulesForThis.binaryOperation + ') in a rule for a binaryOperation.'));
             process.exit(1);
         }
@@ -239,7 +240,7 @@ if (!module.parent) {
 
     if (argv.ruleBinaryOperation) {
         if (argv.ruleBinaryOperation === 'OR' || argv.ruleBinaryOperation === 'AND') {
-            rules.globalAdditionRules.binaryOpertion = argv.ruleBinaryOperation;
+            rules.globalAdditionRules.binaryOperation = argv.ruleBinaryOperation;
         } else {
             console.log(chalk.red('Error: Invalid argument for --ruleBinaryOperation'));
             process.exit(1);
