@@ -1,0 +1,26 @@
+{
+  "float": 22.22,
+  "number": 2,
+
+  "emptyString": "",
+  "stringWithData": "string-two",
+
+  "emptyArrayAcrossFiles": [],
+  "arrayWhichShouldGetSorted": ["two"],
+  "arrayWhichShouldNotGetSorted": ["two"],
+  "arrayWithoutDuplicatesAcrossFiles": [2, "two"],
+  "arrayWithDuplicatesAcrossFilesWhichShouldGetUniqued": [false, "duplicate", "two"],
+  "arrayWithDuplicatesAcrossFilesWhichShouldNotGetUniqued": [false, "duplicate", "two"],
+
+  "emptyObject": {},
+  "simpleObject": { "a": 2 },
+  "deepObject": {
+    "evenDeeper": {
+      "anotherArrayWhichShouldGetSorted": ["two"]
+    }
+  },
+
+  "time": "22.22 seconds",
+
+  "propertyOnlyInFileTwo": true
+}

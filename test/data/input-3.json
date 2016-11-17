@@ -1,0 +1,26 @@
+{
+  "float": 33.33,
+  "number": 3,
+
+  "emptyString": "",
+  "stringWithData": "string-three",
+
+  "emptyArrayAcrossFiles": [],
+  "arrayWhichShouldGetSorted": ["three"],
+  "arrayWhichShouldNotGetSorted": ["three"],
+  "arrayWithoutDuplicatesAcrossFiles": [3, "three"],
+  "arrayWithDuplicatesAcrossFilesWhichShouldGetUniqued": [false, "duplicate", "three"],
+  "arrayWithDuplicatesAcrossFilesWhichShouldNotGetUniqued": [false, "duplicate", "three"],
+
+  "emptyObject": {},
+  "simpleObject": { "a": 3 },
+  "deepObject": {
+    "evenDeeper": {
+      "anotherArrayWhichShouldGetSorted": ["three"]
+    }
+  },
+
+  "time": "33.33 seconds",
+
+  "propertyOnlyInFileThree": true
+}

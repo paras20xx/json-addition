@@ -1,0 +1,60 @@
+{
+  "float": 66.66,
+  "number": 6,
+  "emptyString": ", , ",
+  "stringWithData": "string-one, string-two, string-three",
+  "emptyArrayAcrossFiles": [],
+  "arrayWhichShouldGetSorted": [
+    "one",
+    "three",
+    "two"
+  ],
+  "arrayWhichShouldNotGetSorted": [
+    "one",
+    "two",
+    "three"
+  ],
+  "arrayWithoutDuplicatesAcrossFiles": [
+    1,
+    "one",
+    2,
+    "two",
+    3,
+    "three"
+  ],
+  "arrayWithDuplicatesAcrossFilesWhichShouldGetUniqued": [
+    false,
+    "duplicate",
+    "one",
+    "two",
+    "three"
+  ],
+  "arrayWithDuplicatesAcrossFilesWhichShouldNotGetUniqued": [
+    false,
+    "duplicate",
+    "one",
+    false,
+    "duplicate",
+    "two",
+    false,
+    "duplicate",
+    "three"
+  ],
+  "emptyObject": {},
+  "simpleObject": {
+    "a": 6
+  },
+  "deepObject": {
+    "evenDeeper": {
+      "anotherArrayWhichShouldGetSorted": [
+        "one",
+        "three",
+        "two"
+      ]
+    }
+  },
+  "time": "66.66 seconds",
+  "propertyOnlyInFileOne": true,
+  "propertyOnlyInFileTwo": true,
+  "propertyOnlyInFileThree": true
+}
