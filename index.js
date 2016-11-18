@@ -172,19 +172,19 @@ if (!module.parent) {
 
     if (argv.h || argv.help) {
         console.log(chalk.gray(
-            '\nFormat:   ' + process.argv[0] + ' ' + process.argv[1] + ' --inputFiles="<glob1> [<glob2> [... <globN>]]" [--outputFile="<output-file>"]' +
-            '\nExamples: ' + process.argv[0] + ' ' + process.argv[1] + ' --inputFiles="test/data/input-1.json test/data/input-2.json"' +
-            '\n          ' + process.argv[0] + ' ' + process.argv[1] + ' --inputFiles="test/data/input-1.json test/data/input-2.json test/data/input-3.json" --outputFile=temp/output-1-2-3.json' +
-            '\nOptions:  ' + '-s --silent' +
-            '\n          ' + '-v --verbose' +
-            '\n          ' + '-h --help' +
-            '\n          ' + '   --inputFiles="<glob1> [<glob2> [... <globN>]]"' +
-            '\n          ' + '   --outputFile="<filename>"' +
-            '\n          ' + '   --rules="<filename>"' +
-            '\n          ' + '   --ruleBinaryOperation="<OR/AND>"' +
-            '\n          ' + '   --ruleIgnoreErrors' +
-            '\n          ' + '   --ruleSort' +
-            '\n          ' + '   --ruleUnique' +
+            '\nFormat:   json-addition --inputFiles="<glob1> [<glob2> [... <globN>]]" [--outputFile="<output-file>"]' +
+            '\nExamples: json-addition --inputFiles="test/data/input-1.json test/data/input-2.json"' +
+            '\n          json-addition --inputFiles="test/data/input-1.json test/data/input-2.json test/data/input-3.json" --outputFile=temp/output-1-2-3.json' +
+            '\nOptions:  -s --silent' +
+            '\n          -v --verbose' +
+            '\n          -h --help' +
+            '\n             --inputFiles="<glob1> [<glob2> [... <globN>]]"' +
+            '\n             --outputFile="<filename>"' +
+            '\n             --rules="<filename>"' +
+            '\n             --ruleBinaryOperation="<OR/AND>"' +
+            '\n             --ruleIgnoreErrors' +
+            '\n             --ruleSort' +
+            '\n             --ruleUnique' +
             '\n'
         ));
         process.exit(0);
