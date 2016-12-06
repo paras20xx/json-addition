@@ -1,6 +1,6 @@
 # JSON Addition
 
-Add two or or JSON objects/files, through command-line or programmatically.
+Add two or more JSON objects/files, through command-line or programmatically.
 
 ## Installation and Usage
 
