@@ -44,6 +44,16 @@ var generateJSONsFromFiles = function (inputFiles) {
     return jsons;
 };
 
+// http://stackoverflow.com/questions/3885817/how-do-i-check-that-a-number-is-float-or-integer/3886106#3886106
+var isFloat = function (n) {    // Parameter "n" should be a number
+    return Number(n) === n && n % 1 !== 0;
+};
+
+var fixFloatingError = function (n, precision) {
+    // http://stackoverflow.com/questions/1458633/how-to-deal-with-floating-point-number-precision-in-javascript/3644302#3644302
+    return parseFloat(n.toPrecision(precision || 15));
+};
+
 var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAdditionRules) {
     globalAdditionRules = globalAdditionRules || {};
     specificAdditionRules = specificAdditionRules || {};
@@ -64,6 +74,9 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
         retValue = a || b;
     } else if (typeof a === 'number' && typeof b === 'number') {
         retValue = a + b;
+        if (isFloat(retValue)) {
+            retValue = fixFloatingError(retValue);
+        }
     } else if (typeof a === 'string' && typeof b === 'string') {
         var floatValueA = parseFloat(a),
             remainingValueA = a.replace(/^[0-9\.]+/, ''),
@@ -72,7 +85,7 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
         if (isNaN(floatValueA) || isNaN(floatValueB) || remainingValueA !== remainingValueB) {
             retValue = a + ', ' + b;
         } else {
-            retValue = parseFloat((floatValueA + floatValueB).toPrecision(16)) + remainingValueA;
+            retValue = fixFloatingError(floatValueA + floatValueB) + remainingValueA;
         }
     } else if (typeof a === 'boolean' && typeof b === 'boolean') {
         if (rulesForThis.binaryOperation === 'AND') {

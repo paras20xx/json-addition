@@ -1,5 +1,7 @@
 {
   "float": 22.22,
+  "float1": 0.1,
+  "float2": 1.15,
   "number": 2,
 
   "emptyString": "",

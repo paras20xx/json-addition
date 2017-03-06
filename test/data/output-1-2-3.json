@@ -1,5 +1,7 @@
 {
   "float": 66.66,
+  "float1": 0.3,
+  "float2": 0.15,
   "number": 6,
   "emptyString": ", , ",
   "stringWithData": "string-one, string-two, string-three",
