@@ -20,7 +20,7 @@ $ json-addition --inputFiles="*.json" --outputFile="output.json"
 ### Local Installation and Usage
 
 ```
-$ npm install --save json-hint
+$ npm install --save json-addition
 ```
 
 ```
