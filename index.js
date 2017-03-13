@@ -124,9 +124,13 @@ var addThese = function (a, b, jsonIndex, pathSoFar, key, globalAdditionRules, s
 
         if (rulesForThis.sort) {
             retValue = retValue.sort();
-        }
-        if (rulesForThis.unique) {
-            retValue = _.uniq(retValue);
+            if (rulesForThis.unique) {
+                retValue = _.sortedUniq(retValue);
+            }
+        } else {
+            if (rulesForThis.unique) {
+                retValue = _.uniq(retValue);
+            }
         }
     } else if (typeof a === 'object' && typeof b === 'object') {
         retValue = add(Object.assign({}, a), b, jsonIndex, pathSoFar, rulesForThis, specificAdditionRules);
