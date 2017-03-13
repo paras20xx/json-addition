@@ -1,0 +1,19 @@
+{
+  "globalAdditionRules": {
+    "subtract": true,
+    "ignoreErrors": false,
+    "sort": false,
+    "unique": false
+  },
+  "specificAdditionRules": {
+    "arrayWhichShouldGetSorted": {
+      "sort": true
+    },
+    "arrayWithDuplicatesAcrossFilesWhichShouldGetUniqued": {
+      "unique": true
+    },
+    "deepObject.evenDeeper.anotherArrayWhichShouldGetSorted": {
+      "sort": true
+    }
+  }
+}

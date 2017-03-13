@@ -54,7 +54,7 @@ var fixFloatingError = function (n, precision) {
     return parseFloat(n.toPrecision(precision || 15));
 };
 
-var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAdditionRules) {
+var addThese = function (a, b, jsonIndex, pathSoFar, key, globalAdditionRules, specificAdditionRules) {
     globalAdditionRules = globalAdditionRules || {};
     specificAdditionRules = specificAdditionRules || {};
 
@@ -71,9 +71,17 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
 
     var retValue = null;
     if (typeof a === 'undefined' || typeof b === 'undefined' || a === null || b === null) {
-        retValue = a || b;
+        if (rulesForThis.subtract && jsonIndex === 1) {
+            retValue = '_skipThisProperty';
+        } else {
+            retValue = a || b;
+        }
     } else if (typeof a === 'number' && typeof b === 'number') {
-        retValue = a + b;
+        if (rulesForThis.subtract) {
+            retValue = a - b;
+        } else {
+            retValue = a + b;
+        }
         if (isFloat(retValue)) {
             retValue = fixFloatingError(retValue);
         }
@@ -83,12 +91,22 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
             floatValueB = parseFloat(b),
             remainingValueB = b.replace(/^[0-9\.]+/, '');
         if (isNaN(floatValueA) || isNaN(floatValueB) || remainingValueA !== remainingValueB) {
-            retValue = a + ', ' + b;
+            if (rulesForThis.subtract) {
+                retValue = a.replace(b, b.split('').join("̭") + (b.length ? "̭" : ""));
+            } else {
+                retValue = a + ', ' + b;
+            }
         } else {
-            retValue = fixFloatingError(floatValueA + floatValueB) + remainingValueA;
+            if (rulesForThis.subtract) {
+                retValue = fixFloatingError(floatValueA - floatValueB) + remainingValueA;
+            } else {
+                retValue = fixFloatingError(floatValueA + floatValueB) + remainingValueA;
+            }
         }
     } else if (typeof a === 'boolean' && typeof b === 'boolean') {
-        if (rulesForThis.binaryOperation === 'AND') {
+        if (rulesForThis.subtract) {
+            retValue = a - b;
+        } else if (rulesForThis.binaryOperation === 'AND') {
             retValue = a && b;
         } else if (rulesForThis.binaryOperation === 'OR') {
             retValue = a || b;
@@ -98,7 +116,12 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
             process.exit(1);
         }
     } else if (Array.isArray(a) && Array.isArray(b)) {
-        retValue = a.concat(b);
+        if (rulesForThis.subtract) {
+            retValue = _.difference(a, b);
+        } else {
+            retValue = a.concat(b);
+        }
+
         if (rulesForThis.sort) {
             retValue = retValue.sort();
         }
@@ -106,7 +129,7 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
             retValue = _.uniq(retValue);
         }
     } else if (typeof a === 'object' && typeof b === 'object') {
-        retValue = add(Object.assign({}, a), b, pathSoFar, rulesForThis, specificAdditionRules);
+        retValue = add(Object.assign({}, a), b, jsonIndex, pathSoFar, rulesForThis, specificAdditionRules);
     } else if (typeof a === 'function' && typeof b === 'function') {
         retValue = a.toString() + ', ' + b.toString();
     } else if (typeof a === 'string' || typeof b === 'string') {
@@ -122,14 +145,13 @@ var addThese = function (a, b, pathSoFar, key, globalAdditionRules, specificAddi
     return retValue;
 };
 
-var add = function (output, json, pathSoFar, globalAdditionRules, specificAdditionRules) {
+var add = function (output, json, jsonIndex, pathSoFar, globalAdditionRules, specificAdditionRules) {
     Object.keys(json).forEach(function (key) {
         var val = json[key];
 
-        if (typeof output[key] === 'undefined') {
-            output[key] = val;
-        } else {
-            output[key] = addThese(output[key], val, pathSoFar, key, globalAdditionRules, specificAdditionRules);
+        var value = addThese(output[key], val, jsonIndex, pathSoFar, key, globalAdditionRules, specificAdditionRules);
+        if (value !== '_skipThisProperty') {
+            output[key] = addThese(output[key], val, jsonIndex, pathSoFar, key, globalAdditionRules, specificAdditionRules);
         }
     });
     return output;
@@ -140,8 +162,8 @@ var addJSONs = function (jsons, additionRules) {
     var output = {};
     var globalAdditionRules = Object.assign({}, standardAdditionRules);
     Object.assign(globalAdditionRules, additionRules.globalAdditionRules);
-    jsons.forEach(function (json) {
-        output = add(output, json, '', globalAdditionRules, additionRules.specificAdditionRules);
+    jsons.forEach(function (json, jsonIndex) {
+        output = add(output, json, jsonIndex, '', globalAdditionRules, additionRules.specificAdditionRules);
     });
     return output;
 };
@@ -183,41 +205,51 @@ if (!module.parent) {
         delete argv.silent;
     }
 
+    var showHelp = function () {
+        console.log(chalk.gray([
+            '',
+            'Format:   json-addition --inputFiles="<glob1> [<glob2> [... <globN>]]" [--outputFile="<output-file>"] [<option1> [<option2> [... <optionN>]]]',
+            'Examples: json-addition --inputFiles="test/data/input-1.json test/data/input-2.json"',
+            '          json-addition --inputFiles="test/data/input-1.json test/data/input-2.json test/data/input-3.json" --outputFile=temp/output-1-2-3.json',
+            '          json-addition --inputFiles="test/data/input-1.json test/data/input-3.json test/data/input-2.json" --subtract',
+            'Options:  -s --silent',
+            '          -v --verbose',
+            '          -h --help',
+            '             --inputFiles="<glob1> [<glob2> [... <globN>]]"',
+            '             --outputFile="<filename>"',
+            '             --rules="<filename>"',
+            '             --ruleBinaryOperation="<OR/AND>"',
+            '             --ruleIgnoreErrors',
+            '             --ruleSort',
+            '             --ruleUnique',
+            '             --subtract',
+            ''
+        ].join('\n')));
+    };
+
+    var showHelpAndExitWithError = function (errMsg) {
+        showHelp();
+        console.log(chalk.red(errMsg));
+        process.exit(1);
+    };
+
     if (argv.h || argv.help) {
-        console.log(chalk.gray(
-            '\nFormat:   json-addition --inputFiles="<glob1> [<glob2> [... <globN>]]" [--outputFile="<output-file>"]' +
-            '\nExamples: json-addition --inputFiles="test/data/input-1.json test/data/input-2.json"' +
-            '\n          json-addition --inputFiles="test/data/input-1.json test/data/input-2.json test/data/input-3.json" --outputFile=temp/output-1-2-3.json' +
-            '\nOptions:  -s --silent' +
-            '\n          -v --verbose' +
-            '\n          -h --help' +
-            '\n             --inputFiles="<glob1> [<glob2> [... <globN>]]"' +
-            '\n             --outputFile="<filename>"' +
-            '\n             --rules="<filename>"' +
-            '\n             --ruleBinaryOperation="<OR/AND>"' +
-            '\n             --ruleIgnoreErrors' +
-            '\n             --ruleSort' +
-            '\n             --ruleUnique' +
-            '\n'
-        ));
+        showHelp();
         process.exit(0);
     }
 
     if (argv.inputFiles && typeof argv.inputFiles !== 'string') {
-        console.log(chalk.red('Error: Invalid argument for inputFiles'));
-        process.exit(1);
+        showHelpAndExitWithError('Error: Invalid argument for inputFiles');
     }
     var strInputFiles = (argv.inputFiles || '') && argv.inputFiles.trim(),
         inputFiles = strInputFiles.match(/\S+/g) || [];
 
     if (!inputFiles.length) {
-        console.log(chalk.red('Error: Please provide an argument for --inputFiles'));
-        process.exit(1);
+        showHelpAndExitWithError('Error: Please provide an argument for --inputFiles');
     }
 
     if (argv.outputFile && typeof argv.outputFile !== 'string') {
-        console.log(chalk.red('Error: Invalid argument for --outputFile'));
-        process.exit(1);
+        showHelpAndExitWithError('Error: Invalid argument for --outputFile');
     }
     var outputFile = (argv.outputFile || '') && argv.outputFile.trim();
 
@@ -227,8 +259,7 @@ if (!module.parent) {
         specificAdditionRules: {}
     };
     if (argv.rules && typeof argv.rules !== 'string') {
-        console.log(chalk.red('Error: Invalid argument for --rules'));
-        process.exit(1);
+        showHelpAndExitWithError('Error: Invalid argument for --rules');
     }
     var rulesFile = (argv.rules || '') && argv.rules.trim();
     if (rulesFile) {
@@ -236,8 +267,7 @@ if (!module.parent) {
         try {
             rulesFromFile = JSON.parse(fs.readFileSync(rulesFile, 'utf8'));
         } catch (e) {
-            console.log(chalk.red('Error: Could not find a valid JSON file at: ' + rulesFile));
-            process.exit(1);
+            showHelpAndExitWithError('Error: Could not find a valid JSON file at: ' + rulesFile);
         }
         Object.assign(rules.globalAdditionRules, rulesFromFile.globalAdditionRules);
         Object.assign(rules.specificAdditionRules, rulesFromFile.specificAdditionRules);
@@ -255,13 +285,13 @@ if (!module.parent) {
         if (argv.ruleBinaryOperation === 'OR' || argv.ruleBinaryOperation === 'AND') {
             rules.globalAdditionRules.binaryOperation = argv.ruleBinaryOperation;
         } else {
-            console.log(chalk.red('Error: Invalid argument for --ruleBinaryOperation'));
-            process.exit(1);
+            showHelpAndExitWithError('Error: Invalid argument for --ruleBinaryOperation');
         }
     }
     if (argv.ruleIgnoreErrors) { rules.globalAdditionRules.ignoreErrors = true; }
     if (argv.ruleSort) { rules.globalAdditionRules.sort = true; }
     if (argv.ruleUnique) { rules.globalAdditionRules.unique = true; }
+    if (argv.subtract) { rules.globalAdditionRules.subtract = true; }
 
     var jsons = null;
     if (inputFiles.length) {
@@ -269,8 +299,7 @@ if (!module.parent) {
         inputFiles.forEach(function (inputFilePattern) {
             var thisGlob = glob.sync(inputFilePattern);
             if (!thisGlob.length) {
-                console.log(chalk.red('Error: Could not load file(s) mentioned in --allInputFiles having pattern "' + inputFilePattern + '"'));
-                process.exit(1);
+                showHelpAndExitWithError('Error: Could not load file(s) mentioned in --allInputFiles having pattern "' + inputFilePattern + '"');
             }
             allInputFiles = allInputFiles.concat(thisGlob);
         });
