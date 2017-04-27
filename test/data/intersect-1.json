@@ -1,0 +1,25 @@
+{
+  "arr1": [false, "duplicate", "one"],
+  "bool1": false,
+  "bool2": false,
+  "bool3": true,
+  "bool4": true,
+  "mixed1": "str",
+  "string1": "abcdefgh",
+  "string2": "abcdefgh",
+  "string3": "abcdefgh",
+  "string4": "abcdefgh",
+  "string5": "abcdefgh",
+  "string6": "abcdefgh",
+  "string7": "abcdefgh",
+  "string8": "abcdefgh",
+  "ob1": {
+    "data1": 111,
+    "data2": 111,
+    "data3": 222.22,
+    "data4": 222.22,
+    "data5": 333,
+    "data6": 444,
+    "data7": null
+  }
+}

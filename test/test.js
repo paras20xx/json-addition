@@ -6,6 +6,7 @@ var addJSONs = require('../index.js').addJSONs;
 var addJSONFiles = require('../index.js').addJSONFiles;
 
 var additionRulesToPass = JSON.parse(fs.readFileSync(__dirname + '/data/rules.json', 'utf8')),
+    intersectionRulesToPass = JSON.parse(fs.readFileSync(__dirname + '/data/rules-intersection.json', 'utf8')),
     subtractionRulesToPass = JSON.parse(fs.readFileSync(__dirname + '/data/rules-subtraction.json', 'utf8'));
 
 describe('Addition', function() {
@@ -55,6 +56,16 @@ describe('Addition', function() {
         it('should be able to subtract a json file from another', function(done) {
             var output = addJSONFiles([__dirname + '/data/input-3.json', __dirname + '/data/input-2.json'], null, subtractionRulesToPass, true),
                 expectedOutput = JSON.parse(fs.readFileSync(__dirname + '/data/output-3-minus-2.json', 'utf8'));
+
+            assert.deepEqual(output, expectedOutput);
+            done();
+        });
+    });
+
+    describe('json-intersect-operations', function() {
+        it('should be able to intersect a json file with another', function(done) {
+            var output = addJSONFiles([__dirname + '/data/intersect-1.json', __dirname + '/data/intersect-2.json'], null, intersectionRulesToPass, true),
+                expectedOutput = JSON.parse(fs.readFileSync(__dirname + '/data/output-intersect-1-2.json', 'utf8'));
 
             assert.deepEqual(output, expectedOutput);
             done();

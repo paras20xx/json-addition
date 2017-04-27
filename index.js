@@ -3,6 +3,7 @@
 var fs = require('fs');
 
 var _ = require('lodash'),
+    clone = require('clone'),
     chalk = require('chalk');
 
 var standardAdditionRules = {
@@ -71,40 +72,52 @@ var addThese = function (a, b, jsonIndex, pathSoFar, key, globalAdditionRules, s
 
     var retValue = null;
     if (typeof a === 'undefined' || typeof b === 'undefined' || a === null || b === null) {
-        if (rulesForThis.subtract && jsonIndex === 1) {
+        if (rulesForThis.intersect) {
+            retValue = (a === b) ? a : undefined;   // Note: If a === b === undefined then that value would also be undefined, which is same as the else case
+        } else if (rulesForThis.subtract && jsonIndex === 1) {
             retValue = '_skipThisProperty';
         } else {
             retValue = a || b;
         }
     } else if (typeof a === 'number' && typeof b === 'number') {
-        if (rulesForThis.subtract) {
-            retValue = a - b;
+        if (rulesForThis.intersect) {
+            retValue = (a === b) ? a : undefined;
         } else {
-            retValue = a + b;
-        }
-        if (isFloat(retValue)) {
-            retValue = fixFloatingError(retValue);
+            if (rulesForThis.subtract) {
+                retValue = a - b;
+            } else {
+                retValue = a + b;
+            }
+            if (isFloat(retValue)) {
+                retValue = fixFloatingError(retValue);
+            }
         }
     } else if (typeof a === 'string' && typeof b === 'string') {
-        var floatValueA = parseFloat(a),
-            remainingValueA = a.replace(/^[0-9\.]+/, ''),
-            floatValueB = parseFloat(b),
-            remainingValueB = b.replace(/^[0-9\.]+/, '');
-        if (isNaN(floatValueA) || isNaN(floatValueB) || remainingValueA !== remainingValueB) {
-            if (rulesForThis.subtract) {
-                retValue = a.replace(b, b.split('').join("̭") + (b.length ? "̭" : ""));
-            } else {
-                retValue = a + ', ' + b;
-            }
+        if (rulesForThis.intersect) {
+            retValue = (a === b) ? a : undefined;
         } else {
-            if (rulesForThis.subtract) {
-                retValue = fixFloatingError(floatValueA - floatValueB) + remainingValueA;
+            var floatValueA = parseFloat(a),
+                remainingValueA = a.replace(/^[0-9\.]+/, ''),
+                floatValueB = parseFloat(b),
+                remainingValueB = b.replace(/^[0-9\.]+/, '');
+            if (isNaN(floatValueA) || isNaN(floatValueB) || remainingValueA !== remainingValueB) {
+                if (rulesForThis.subtract) {
+                    retValue = a.replace(b, b.split('').join("̭") + (b.length ? "̭" : ""));
+                } else {
+                    retValue = a + ', ' + b;
+                }
             } else {
-                retValue = fixFloatingError(floatValueA + floatValueB) + remainingValueA;
+                if (rulesForThis.subtract) {
+                    retValue = fixFloatingError(floatValueA - floatValueB) + remainingValueA;
+                } else {
+                    retValue = fixFloatingError(floatValueA + floatValueB) + remainingValueA;
+                }
             }
         }
     } else if (typeof a === 'boolean' && typeof b === 'boolean') {
-        if (rulesForThis.subtract) {
+        if (rulesForThis.intersect) {
+            retValue = (a === b) ? a : undefined;
+        } else if (rulesForThis.subtract) {
             retValue = a - b;
         } else if (rulesForThis.binaryOperation === 'AND') {
             retValue = a && b;
@@ -116,7 +129,9 @@ var addThese = function (a, b, jsonIndex, pathSoFar, key, globalAdditionRules, s
             process.exit(1);
         }
     } else if (Array.isArray(a) && Array.isArray(b)) {
-        if (rulesForThis.subtract) {
+        if (rulesForThis.intersect) {
+            retValue = _.intersection(a, b);
+        } else if (rulesForThis.subtract) {
             retValue = _.difference(a, b);
         } else {
             retValue = a.concat(b);
@@ -135,12 +150,20 @@ var addThese = function (a, b, jsonIndex, pathSoFar, key, globalAdditionRules, s
     } else if (typeof a === 'object' && typeof b === 'object') {
         retValue = add(Object.assign({}, a), b, jsonIndex, pathSoFar, rulesForThis, specificAdditionRules);
     } else if (typeof a === 'function' && typeof b === 'function') {
-        retValue = a.toString() + ', ' + b.toString();
+        if (rulesForThis.intersect) {
+            retValue = (a === b) ? a : undefined;
+        } else {
+            retValue = a.toString() + ', ' + b.toString();
+        }
     } else if (typeof a === 'string' || typeof b === 'string') {
-        retValue = a.toString() + ', ' + b.toString();
+        if (rulesForThis.intersect) {
+            retValue = (a === b) ? a : undefined;
+        } else {
+            retValue = a.toString() + ', ' + b.toString();
+        }
     } else {
         if (rulesForThis.ignoreErrors) {
-            retValue = a.toString() + ', ' + b.toString();
+            retValue = 'an-unexpected-error-occurred-in-json-operation';
         } else {
             console.log('Error: TODO');
             process.exit(1);
@@ -163,17 +186,22 @@ var add = function (output, json, jsonIndex, pathSoFar, globalAdditionRules, spe
 
 var addJSONs = function (jsons, additionRules) {
     additionRules = additionRules || {};
-    var output = {};
+    var output = clone((jsons && jsons[0]) || {});
     var globalAdditionRules = Object.assign({}, standardAdditionRules);
     Object.assign(globalAdditionRules, additionRules.globalAdditionRules);
     jsons.forEach(function (json, jsonIndex) {
-        output = add(output, json, jsonIndex, '', globalAdditionRules, additionRules.specificAdditionRules);
+        if (jsonIndex === 0) {
+            // do nothing
+        } else {
+            output = add(output, json, jsonIndex, '', globalAdditionRules, additionRules.specificAdditionRules);
+        }
     });
     return output;
 };
 
 var writeJSON = function (file, json) {
-    fs.writeFile(file, JSON.stringify(json, null, '  '), 'utf8', function (err) {
+    // Replace undefined with null in JSON.stringify
+    fs.writeFile(file, JSON.stringify(json, function(k, v) { if (v === undefined) { return null; } return v; }, '  '), 'utf8', function (err) {
         if (err) {
             console.log(chalk.red('\n \u2718 ') + chalk.gray('Error in writing data to file: ' + file) + '\n');
         } else {
@@ -187,8 +215,9 @@ var outputToFileOrLog = function (file, json, skipOutput) {
         if (file) {
             writeJSON(file, json);
         } else {
-            console.log(JSON.stringify(json, null, '  '));
-            // console.log(require('util').inspect(json, { depth: null, colors: true, breakLength: 0 }));
+            // Replace undefined with null in JSON.stringify
+            console.log(JSON.stringify(json, function(k, v) { if (v === undefined) { return null; } return v; }, '  '));
+            // console.log(require('util').inspect(json, { depth: null, colors: true, breakLength: 0 }));   // This commented piece of code is not the same as the JSON.stringify version (because that converts undefined to null)
         }
     }
     return json;
@@ -227,6 +256,7 @@ if (!module.parent) {
             '             --ruleSort',
             '             --ruleUnique',
             '             --subtract',
+            '             --intersect',
             ''
         ].join('\n')));
     };
@@ -296,6 +326,7 @@ if (!module.parent) {
     if (argv.ruleSort) { rules.globalAdditionRules.sort = true; }
     if (argv.ruleUnique) { rules.globalAdditionRules.unique = true; }
     if (argv.subtract) { rules.globalAdditionRules.subtract = true; }
+    if (argv.intersect) { rules.globalAdditionRules.intersect = true; }
 
     var jsons = null;
     if (inputFiles.length) {
