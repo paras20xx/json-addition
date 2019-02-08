@@ -97,9 +97,9 @@ var addThese = function (a, b, jsonIndex, pathSoFar, key, globalAdditionRules, s
             retValue = (a === b) ? a : undefined;
         } else {
             var floatValueA = parseFloat(a),
-                remainingValueA = a.replace(/^[0-9\.]+/, ''),
+                remainingValueA = a.replace(/^[0-9.]+/, ''),
                 floatValueB = parseFloat(b),
-                remainingValueB = b.replace(/^[0-9\.]+/, '');
+                remainingValueB = b.replace(/^[0-9.]+/, '');
             if (isNaN(floatValueA) || isNaN(floatValueB) || remainingValueA !== remainingValueB) {
                 if (rulesForThis.subtract) {
                     retValue = a.replace(b, b.split('').join("̭") + (b.length ? "̭" : ""));
